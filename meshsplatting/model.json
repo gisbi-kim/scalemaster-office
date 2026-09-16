@@ -1,0 +1,94 @@
+{
+  "method": "MeshSplatting",
+  "iteration": 30000,
+  "vertices": 2832996,
+  "triangles": 5384233,
+  "sh_degree": 3,
+  "storage": "lossless gzip of float32 positions/SH and uint32 connected indices",
+  "appearance": "Per-vertex SH3, screen-linear interpolation as in the CUDA source. Opaque depth-tested mesh; final soft-edge/sigma compositing is replaced by standard opaque rasterization.",
+  "files": {
+    "positions": {
+      "bytes": 33995952,
+      "sha256": "1a94af0b791fd1282d4f04510fc95a4ad7c21cbc7af5761b91a2920ec9846d43",
+      "chunks": [
+        {
+          "file": "positions-0.bin.gz",
+          "bytes": 31996932
+        }
+      ]
+    },
+    "triangles": {
+      "bytes": 64610796,
+      "sha256": "1fdbae9ec62d73dda5a3d84c5e04e8367f25d11cd94c4312771d37c1ca701102",
+      "chunks": [
+        {
+          "file": "triangles-0.bin.gz",
+          "bytes": 23666886
+        },
+        {
+          "file": "triangles-1.bin.gz",
+          "bytes": 9100961
+        }
+      ]
+    },
+    "sh": {
+      "bytes": 543935232,
+      "sha256": "e784097d90f44beeef40cbea3b205f2563c7e5c23d5ade4d2cdbacb2bded125e",
+      "chunks": [
+        {
+          "file": "sh-0.bin.gz",
+          "bytes": 44926915
+        },
+        {
+          "file": "sh-1.bin.gz",
+          "bytes": 44874715
+        },
+        {
+          "file": "sh-2.bin.gz",
+          "bytes": 44832413
+        },
+        {
+          "file": "sh-3.bin.gz",
+          "bytes": 44874853
+        },
+        {
+          "file": "sh-4.bin.gz",
+          "bytes": 44844655
+        },
+        {
+          "file": "sh-5.bin.gz",
+          "bytes": 44835592
+        },
+        {
+          "file": "sh-6.bin.gz",
+          "bytes": 44842641
+        },
+        {
+          "file": "sh-7.bin.gz",
+          "bytes": 44835078
+        },
+        {
+          "file": "sh-8.bin.gz",
+          "bytes": 44852165
+        },
+        {
+          "file": "sh-9.bin.gz",
+          "bytes": 44843040
+        },
+        {
+          "file": "sh-10.bin.gz",
+          "bytes": 44847479
+        },
+        {
+          "file": "sh-11.bin.gz",
+          "bytes": 14882007
+        }
+      ]
+    }
+  },
+  "original_bytes": 718488116,
+  "native_opacity_floor": 0.9999,
+  "native_sigma": 9.99999999999889e-05,
+  "native_supersampling": 2,
+  "opacity_treatment": "Browser opacity is 1. Native CUDA alpha is capped at 0.999 and triangles use depth-sorted soft compositing; browser uses per-pixel hardware depth testing."
+}
