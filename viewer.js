@@ -2,6 +2,7 @@ import {sampleTour,timeAtFrame,easeInOut} from './calm-tour.mjs?v=calm1';
 import * as THREE from 'three';
 import {installDalgu} from './dalgu-office.js?v=lock2';
 let dalgu;
+const DEFAULT_START=65;
 import {OrbitControls} from './vendor/OrbitControls.js';
 import {SparkRenderer,SplatMesh} from './vendor/spark.module.js';
 const $=s=>document.querySelector(s),status=$('#status');
@@ -9,7 +10,7 @@ const renderer=new THREE.WebGLRenderer({antialias:false});renderer.setPixelRatio
 const scene=new THREE.Scene(),camera=new THREE.PerspectiveCamera(56.51,innerWidth/innerHeight,.05,120),controls=new OrbitControls(camera,renderer.domElement);controls.enableDamping=true;controls.dampingFactor=.1;controls.minDistance=.08;controls.maxDistance=80;controls.screenSpacePanning=true;
 const spark=new SparkRenderer({renderer});scene.add(spark);
 let tourSamples=[],tourTime=0,tourRate=0,tourElapsed=0,tourBlendDuration=1.2,tourStartP=new THREE.Vector3(),tourStartQ=new THREE.Quaternion(),tourStartFov=56.51;
-let frames=[],poses=[],tour=false,t=5,ready=false,previous=performance.now();const keys=new Set();let drawUntil=performance.now()+8000;controls.addEventListener('change',()=>drawUntil=performance.now()+700);
+let frames=[],poses=[],tour=false,t=DEFAULT_START,ready=false,previous=performance.now();const keys=new Set();let drawUntil=performance.now()+8000;controls.addEventListener('change',()=>drawUntil=performance.now()+700);
 function stop(){tour=false;tourRate=0;drawUntil=performance.now()+700;controls.enabled=!dalgu?.active;$('#tour').textContent='▶ 편안한 투어';}
 function poseAt(i){const a=poses[Math.floor(i)],b=poses[Math.min(Math.floor(i)+1,poses.length-1)],u=i-Math.floor(i);camera.position.lerpVectors(a.p,b.p,u);camera.quaternion.slerpQuaternions(a.q,b.q,u);const dir=new THREE.Vector3(0,0,-1).applyQuaternion(camera.quaternion);controls.target.copy(camera.position).addScaledVector(dir,2);$('#timeline').value=String(Math.round(i));$('#frameLabel').textContent=`${Math.round(i)+1} / ${frames.length}`;}
 function applyTour(blend=1){const {a,b,u,index}=sampleTour(tourSamples,tourTime);camera.position.lerpVectors(a.p,b.p,u);camera.quaternion.slerpQuaternions(a.q,b.q,u);if(blend<1){camera.position.lerpVectors(tourStartP,camera.position,blend);camera.quaternion.slerpQuaternions(tourStartQ,camera.quaternion,blend);}camera.fov=THREE.MathUtils.lerp(tourStartFov,56.51,blend);camera.updateProjectionMatrix();controls.target.copy(camera.position).addScaledVector(camera.getWorldDirection(new THREE.Vector3()),2);t=index;$('#timeline').value=String(Math.round(t));$('#frameLabel').textContent=`${Math.round(t)+1} / ${frames.length}`;}
@@ -18,15 +19,22 @@ function advanceTour(dt){tourElapsed+=dt;if(tourElapsed<tourBlendDuration){apply
 function jump(i){stop();t=Math.min(i,poses.length-1);if(dalgu?.active){dalgu.spawn(t);$('#timeline').value=String(t);$('#frameLabel').textContent=`${t+1} / ${frames.length}`;return;}poseAt(t);controls.update();}
 function resize(){camera.aspect=innerWidth/innerHeight;camera.fov=dalgu?.active?75:56.51;camera.updateProjectionMatrix();renderer.setSize(innerWidth,innerHeight)}addEventListener('resize',resize);resize();
 $('#togglePanel').onclick=()=>{const closed=$('#panel').classList.toggle('hidden');$('#togglePanel').textContent=closed?'메뉴 열기':'메뉴 접기';};
-$('#tour').onclick=beginTour;$('#home').onclick=()=>jump(5);$('#timeline').oninput=e=>jump(+e.target.value);$('#speed').oninput=e=>$('#speedLabel').textContent=e.target.value+'×';document.querySelectorAll('[data-frame]').forEach(b=>b.onclick=()=>jump(+b.dataset.frame));
+$('#tour').onclick=beginTour;$('#home').onclick=()=>jump(DEFAULT_START);$('#timeline').oninput=e=>jump(+e.target.value);$('#speed').oninput=e=>$('#speedLabel').textContent=e.target.value+'×';document.querySelectorAll('[data-frame]').forEach(b=>b.onclick=()=>jump(+b.dataset.frame));
 renderer.domElement.addEventListener('pointerdown',stop);renderer.domElement.addEventListener('wheel',stop);document.addEventListener('visibilitychange',()=>{if(document.hidden){stop();keys.clear();}});addEventListener('blur',()=>keys.clear());
 addEventListener('keydown',e=>{if(dalgu?.active)return;if(e.key==='Escape')stop();if(['INPUT','BUTTON'].includes(document.activeElement?.tagName))return;keys.add(e.key.toLowerCase());if('wasdqe'.includes(e.key.toLowerCase())){stop();e.preventDefault();}});addEventListener('keyup',e=>keys.delete(e.key.toLowerCase()));
 function animate(now){const dt=Math.min((now-previous)/1000,.05);previous=now;if(ready){if(dalgu?.active){dalgu.tick(dt);}else if(tour){advanceTour(dt);}else{const v=new THREE.Vector3(),f=camera.getWorldDirection(new THREE.Vector3()),r=new THREE.Vector3(1,0,0).applyQuaternion(camera.quaternion);if(keys.has('w'))v.add(f);if(keys.has('s'))v.sub(f);if(keys.has('d'))v.add(r);if(keys.has('a'))v.sub(r);if(keys.has('e'))v.y+=1;if(keys.has('q'))v.y-=1;if(v.lengthSq()){v.normalize().multiplyScalar(dt*(keys.has('shift')?5:1.5)*+$('#speed').value);camera.position.add(v);controls.target.add(v);}controls.update();}}if(now<drawUntil||tour||keys.size||dalgu?.needsRender)renderer.render(scene,camera);requestAnimationFrame(animate);}requestAnimationFrame(animate);
 try{
- frames=await(await fetch('./cameras.json')).json();poses=frames.map(f=>{const m=new THREE.Matrix4().set(...f.pose.flat()).multiply(new THREE.Matrix4().makeScale(1,-1,-1));return{p:new THREE.Vector3().setFromMatrixPosition(m),q:new THREE.Quaternion().setFromRotationMatrix(m)}});const calm=await(await fetch('./calm-tour.json?v=calm1')).json();tourSamples=calm.samples.map(s=>({...s,p:new THREE.Vector3().fromArray(s.p),q:new THREE.Quaternion().fromArray(s.q)}));$('#timeline').max=poses.length-1;poseAt(5);
- const mesh=new SplatMesh({url:'./office.sog?v=compact1',onProgress:e=>{$('#progress').textContent=e.total?`Gaussian 데이터 ${Math.round(e.loaded/e.total*100)}%`:'Gaussian 데이터 읽는 중…';}});await mesh.initialized;scene.add(mesh);ready=true;drawUntil=performance.now()+3000;$('#loading').classList.add('hidden');status.textContent='GS 19.37 MB · 경량 뷰어';
+ frames=await(await fetch('./cameras.json')).json();poses=frames.map(f=>{const m=new THREE.Matrix4().set(...f.pose.flat()).multiply(new THREE.Matrix4().makeScale(1,-1,-1));return{p:new THREE.Vector3().setFromMatrixPosition(m),q:new THREE.Quaternion().setFromRotationMatrix(m)}});const calm=await(await fetch('./calm-tour.json?v=calm1')).json();tourSamples=calm.samples.map(s=>({...s,p:new THREE.Vector3().fromArray(s.p),q:new THREE.Quaternion().fromArray(s.q)}));$('#timeline').max=poses.length-1;poseAt(DEFAULT_START);
+ const mesh=new SplatMesh({url:'./office.sog?v=compact1',onProgress:e=>{$('#progress').textContent=e.total?`Gaussian 데이터 ${Math.round(e.loaded/e.total*100)}%`:'Gaussian 데이터 읽는 중…';}});await mesh.initialized;scene.add(mesh);ready=true;drawUntil=performance.now()+3000;$('#progress').textContent='달구를 불러오는 중…';status.textContent='GS 19.37 MB · 경량 뷰어';
  const report=await(await fetch('./report.json?v=600final35600')).json();$('#details').textContent='1,250,000 Gaussians · SH3 · SOG 19.37 MB · 검증 PSNR 23.04 dB';
  window.officeViewer={ready:true,camera,controls,renderer,scene,mesh,frames,jump,stop,setWalkIndex(i){t=i;$('#timeline').value=String(i);$('#frameLabel').textContent=`${i+1} / ${frames.length}`;},redraw(){drawUntil=performance.now()+1500;},get currentIndex(){return t;},get tour(){return tour;},get dalgu(){return dalgu;}};
- try{dalgu=await installDalgu(window.officeViewer);window.officeViewer.redraw();const params=new URLSearchParams(location.search);if(params.has('walk')){const start=Number(params.get('start')||5);if(Number.isFinite(start))jump(start);dalgu.enter(params.get('walk')==='follow');}}catch(e){console.error(e);$('#error').textContent='달구 모드를 불러오지 못했어요: '+e.message;}
+ try{
+  dalgu=await installDalgu(window.officeViewer);
+  const params=new URLSearchParams(location.search),start=Number(params.get('start')||DEFAULT_START);
+  jump(Number.isFinite(start)?THREE.MathUtils.clamp(Math.round(start),0,poses.length-1):DEFAULT_START);
+  dalgu.enter(!params.has('walk')||params.get('walk')==='follow');
+  window.officeViewer.redraw();
+ }catch(e){console.error(e);$('#error').textContent='달구 모드를 불러오지 못했어요: '+e.message;}
+ finally{$('#loading').classList.add('hidden');}
 }catch(e){console.error(e);$('#progress').textContent='불러오지 못했습니다: '+e.message;$('#error').textContent=e.message;status.textContent='로딩 오류';}
 
