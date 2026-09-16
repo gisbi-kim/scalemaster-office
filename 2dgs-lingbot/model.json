@@ -1,0 +1,14 @@
+{
+  "method": "2DGS",
+  "iteration": 30000,
+  "original": 107709940,
+  "bytes": 31808992,
+  "count": 441428,
+  "compressionLevel": 1,
+  "shDegree": 2,
+  "alphaPruning": 0,
+  "renderMode": "TwoD: perspective-correct ray/surfel intersection",
+  "renderer": "GaussianSplats3D 0.4.7",
+  "appearance": "Native SH3 truncated to SH2; half precision KSplat storage; CPU worker sorting.",
+  "initialization": "LingBot-Map predicted depth, TRAIN RGB only, camera-aligned fusion"
+}
