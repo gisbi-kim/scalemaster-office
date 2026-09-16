@@ -1,0 +1,22 @@
+{
+  "method": "RGB-D + AbsGS",
+  "steps": 35600,
+  "exported_gaussians": 1250000,
+  "training_views": 560,
+  "heldout_views": 40,
+  "total_views": 600,
+  "training_resolution": [
+    1920,
+    1440
+  ],
+  "sh_degree": 3,
+  "pose_note": "560 training cameras independently aligned photometrically to the previous model for 40 Adam updates each, then held fixed during full-resolution scene refinement; 40 evaluation cameras unchanged.",
+  "initialization": "Previous 30k-step RGB-D Gaussian model. New scene refinement starts after camera alignment.",
+  "status": "complete",
+  "validation_psnr_full_resolution": 23.041984844207764,
+  "format": "SOG v2",
+  "bytes": 19368942,
+  "source_gaussians": 1846551,
+  "compression": "SplatTransform 3.4.2 adaptive decimation + SOG SH3, 20 k-means iterations",
+  "source_psnr_full_resolution": 23.160675621032716
+}
